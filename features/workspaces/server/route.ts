@@ -20,7 +20,7 @@ const app = new Hono()
     const databases = c.get("databases");
 
     // Check if user is admin - if admin, show all workspaces
-    const isAdmin = user.email === 'admin@company.com' || user.name?.toLowerCase().includes('admin');
+    const isAdmin = user.email === 'admin@edu-nova.tech' || user.name?.toLowerCase().includes('admin');
     
     if (isAdmin) {
       // Admin sees all workspaces
@@ -60,7 +60,7 @@ const app = new Hono()
       const user = c.get("user");
 
       // Check if user is admin - only admin can create workspaces
-      const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+      const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
       
       if (!isAdmin) {
         return c.json({ error: "Unauthorized. Only admin can create workspaces." }, 403);

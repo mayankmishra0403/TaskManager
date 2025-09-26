@@ -25,7 +25,7 @@ const app = new Hono()
     }
 
     // Check if user is admin or member of workspace
-    const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+    const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
     
     if (!isAdmin) {
       // For employees, check if they are member of workspace
@@ -58,7 +58,7 @@ const app = new Hono()
       const { name, description, workspaceId, image } = c.req.valid("form");
 
       // Check if user is admin - only admin can create projects
-      const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+      const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
       
       if (!isAdmin) {
         return c.json({ error: "Unauthorized. Only admin can create projects." }, 403);

@@ -31,7 +31,7 @@ export const GlobalAdminDashboard = () => {
   const { data: allTasks, isLoading: tasksLoading } = useGetAllTasks();
   const { data: allProjects, isLoading: projectsLoading } = useGetAllProjects();
 
-  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@company.com";
+  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@edu-nova.tech";
 
   if (!isAdmin) {
     return (

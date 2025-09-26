@@ -57,7 +57,7 @@ const app = new Hono()
     }
 
     // Check if user is admin or member of workspace
-    const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+    const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
     
     if (!isAdmin) {
       // For employees, check if they are member of workspace
@@ -130,7 +130,7 @@ const app = new Hono()
       }
 
       // Check if user is admin - only admin can create tasks
-      const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+      const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
       
       if (!isAdmin) {
         return c.json({ error: "Unauthorized. Only admin can create tasks." }, 403);
@@ -187,7 +187,7 @@ const app = new Hono()
       const task = await databases.getDocument(DATABASE_ID, TASKS_ID, taskId);
       
       // Check if user is admin or assigned to the task
-      const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+      const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
       
       if (!isAdmin && task.assigneeId !== user.$id) {
         return c.json({ error: "Unauthorized" }, 401);
@@ -216,7 +216,7 @@ const app = new Hono()
       );
 
       // Check if user is admin or member of workspace
-      const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+      const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
       
       if (!isAdmin) {
         // For employees, check if they are member of workspace
@@ -271,7 +271,7 @@ const app = new Hono()
     );
 
     // Check if user is admin or member of workspace
-    const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+    const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
     
     if (!isAdmin) {
       // For employees, check if they are member of workspace

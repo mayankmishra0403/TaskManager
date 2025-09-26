@@ -49,7 +49,7 @@ const MainDashboard = () => {
   const { data: user, isLoading: userLoading } = useCurrent();
   
   // Determine if user is admin
-  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@company.com";
+  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@edu-nova.tech";
   
   // Dashboard shows ALL tasks for everyone (admin and employees)
   const { data: adminTasksData, isLoading: adminTasksLoading } = useGetAllTasks({ enabled: true });

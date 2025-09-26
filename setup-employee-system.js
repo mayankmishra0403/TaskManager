@@ -77,23 +77,23 @@ async function setupEmployeeSystem() {
         console.log('\n👤 Checking for admin user...');
         try {
             const usersList = await users.list();
-            const adminUser = usersList.users.find(user => user.email === 'admin@company.com');
+            const adminUser = usersList.users.find(user => user.email === 'admin@edu-nova.tech');
             
             if (!adminUser) {
                 console.log('👤 Creating default admin user...');
                 const newAdmin = await users.create(
                     ID.unique(),
-                    'admin@company.com',
+                    'admin@edu-nova.tech',
                     undefined, // phone
                     'admin123', // password
                     'Admin User' // name
                 );
                 console.log(`✅ Admin user created with ID: ${newAdmin.$id}`);
-                console.log('📧 Admin Email: admin@company.com');
+                console.log('📧 Admin Email: admin@edu-nova.tech');
                 console.log('🔐 Admin Password: admin123');
             } else {
                 console.log('✅ Admin user already exists');
-                console.log('📧 Admin Email: admin@company.com');
+                console.log('📧 Admin Email: admin@edu-nova.tech');
             }
         } catch (error) {
             console.log('ℹ️  Admin user management handled by auth system');
@@ -103,7 +103,7 @@ async function setupEmployeeSystem() {
         console.log('📝 Add this to your .env.local file:');
         console.log(`NEXT_PUBLIC_APPWRITE_EMPLOYEES_ID=${employeesCollection.$id}`);
         console.log('\n👤 Default Admin Credentials:');
-        console.log('Email: admin@company.com');
+        console.log('Email: admin@edu-nova.tech');
         console.log('Password: admin123');
 
     } catch (error) {

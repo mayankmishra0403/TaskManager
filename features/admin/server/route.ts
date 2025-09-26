@@ -14,7 +14,7 @@ const app = new Hono()
     const databases = c.get("databases");
 
     // Check if user is admin
-    const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+    const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
     
     if (!isAdmin) {
       return c.json({ error: "Unauthorized. Only admin can view all employees." }, 403);
@@ -39,7 +39,7 @@ const app = new Hono()
 
     // Allow both admin and employees to view all tasks (for dashboard)
     // Admin can manage tasks, employees can view all tasks but not modify them
-    const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+    const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
 
     // Get all tasks across all workspaces
     const tasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, [
@@ -83,7 +83,7 @@ const app = new Hono()
     const databases = c.get("databases");
 
     // Check if user is admin
-    const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+    const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
     
     if (!isAdmin) {
       return c.json({ error: "Unauthorized. Only admin can view all projects." }, 403);
@@ -102,7 +102,7 @@ const app = new Hono()
     const { taskId } = c.req.param();
     
     // Check if user is admin
-    const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+    const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
     
     if (!isAdmin) {
       return c.json({ error: "Unauthorized. Only admin can update tasks." }, 403);
@@ -174,7 +174,7 @@ const app = new Hono()
     const databases = c.get("databases");
     
     // Check if user is admin
-    const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+    const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
     
     if (!isAdmin) {
       return c.json({ error: "Unauthorized. Only admin can fix tasks." }, 403);

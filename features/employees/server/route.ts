@@ -20,7 +20,7 @@ const app = new Hono()
     const databases = c.get("databases");
 
     // Check if user is admin - only admin can view employees
-    const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+    const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
     
     if (!isAdmin) {
       return c.json({ error: "Unauthorized. Only admin can view employees." }, 403);
@@ -43,7 +43,7 @@ const app = new Hono()
       const { name, email, password, employeeId, department } = c.req.valid("json");
 
       // Check if user is admin - only admin can create employees
-      const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+      const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
       
       if (!isAdmin) {
         return c.json({ error: "Unauthorized. Only admin can create employees." }, 403);

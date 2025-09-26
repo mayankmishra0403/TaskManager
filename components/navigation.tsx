@@ -29,7 +29,7 @@ const Navigation = () => {
   }
 
   // Check if user is admin
-  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@company.com";
+  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@edu-nova.tech";
 
   const routes = isAdmin ? [
     // Admin routes

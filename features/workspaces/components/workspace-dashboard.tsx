@@ -18,7 +18,7 @@ export const WorkspaceDashboard = ({ workspaceId }: WorkspaceDashboardProps) => 
   const { data: user } = useCurrent();
 
   // Check if user is admin
-  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@company.com";
+  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@edu-nova.tech";
 
   // Filter tasks for employees - they only see assigned tasks
   const displayTasks = isAdmin ? tasks?.documents : tasks?.documents.filter(task => task.assigneeId === user?.$id);

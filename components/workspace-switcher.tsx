@@ -20,7 +20,7 @@ export const WorkspaceSwitcher = () => {
   const router = useRouter();
 
   // Check if user is admin
-  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@company.com";
+  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@edu-nova.tech";
 
   const onSelect = (id: string) => {
     router.push(`/workspaces/${id}`);

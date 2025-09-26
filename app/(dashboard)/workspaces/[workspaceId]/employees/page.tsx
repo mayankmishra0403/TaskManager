@@ -14,7 +14,7 @@ export default async function EmployeesPage({ params }: EmployeesPageProps) {
   if (!user) redirect("/sign-in");
 
   // Check if user is admin
-  const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+  const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
   
   if (!isAdmin) {
     redirect(`/workspaces/${params.workspaceId}`);

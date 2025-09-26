@@ -60,7 +60,7 @@ export const SimpleEmployeeManagement = () => {
     );
   };
 
-  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@company.com";
+  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@edu-nova.tech";
 
   if (!isAdmin) {
     return (

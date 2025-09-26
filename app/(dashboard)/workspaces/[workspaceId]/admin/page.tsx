@@ -13,7 +13,7 @@ const AdminPage = async ({ params }: AdminPageProps) => {
   if (!user) redirect("/sign-in");
 
   // Check if user is admin
-  const isAdmin = user.email === 'admin@company.com' || user.name?.toLowerCase().includes('admin');
+  const isAdmin = user.email === 'admin@edu-nova.tech' || user.name?.toLowerCase().includes('admin');
   if (!isAdmin) {
     redirect(`/workspaces/${params.workspaceId}`);
   }

@@ -9,7 +9,7 @@ export default async function WorkspacesPage() {
   if (!user) redirect("/sign-in");
 
   // Check if user is admin
-  const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+  const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
 
   return (
     <div className="h-full p-6">

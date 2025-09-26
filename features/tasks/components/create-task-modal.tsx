@@ -56,7 +56,7 @@ export const CreateTaskModal = ({
   console.log("All employees data:", allEmployees);
 
   // Check if user is admin
-  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@company.com";
+  const isAdmin = user?.labels?.includes("admin") || user?.email === "admin@edu-nova.tech";
 
   const form = useForm<z.infer<typeof createTaskSchema>>({
     resolver: zodResolver(createTaskSchema),

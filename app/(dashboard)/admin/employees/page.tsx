@@ -8,7 +8,7 @@ export default async function AdminEmployeesPage() {
   if (!user) redirect("/sign-in");
 
   // Check if user is admin
-  const isAdmin = user.labels?.includes("admin") || user.email === "admin@company.com";
+  const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
   
   if (!isAdmin) {
     redirect("/");
