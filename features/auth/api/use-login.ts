@@ -21,8 +21,11 @@ export const useLogin = () => {
     },
     onSuccess: () => {
       toast.success("Logged in succesfully");
-      router.refresh();
       queryClient.invalidateQueries({ queryKey: ["current"] });
+      // Small delay to ensure state is updated, then redirect
+      setTimeout(() => {
+        router.replace("/");
+      }, 500);
     },
     onError: () => {
       toast.error("Error logging in");
