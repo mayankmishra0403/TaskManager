@@ -51,8 +51,24 @@ const app = new Hono()
 
       return c.json({ success: true });
     } catch (error) {
-      console.error("Login error:", error);
-      return c.json({ error: "Invalid credentials" }, 401);
+      const errorDetails = error as any;
+      console.error("Login error details:", {
+        identifier,
+        error: errorDetails?.message || error,
+        type: errorDetails?.type,
+        code: errorDetails?.code,
+        environment: {
+          appwriteEndpoint: process.env.NEXT_APPWRITE_ENDPOINT,
+          projectId: process.env.NEXT_APPWRITE_PROJECT,
+          hasApiKey: !!process.env.NEXT_APPWRITE_KEY,
+          hasDatabaseId: !!process.env.NEXT_APPWRITE_DATABASE_ID,
+          hasEmployeesId: !!process.env.NEXT_APPWRITE_EMPLOYEES_ID,
+        }
+      });
+      return c.json({ 
+        error: "Invalid credentials",
+        debug: process.env.NODE_ENV === 'development' ? errorDetails?.message : undefined
+      }, 401);
     }
   })
   .post("/logout", sessionMiddleware, async (c) => {
