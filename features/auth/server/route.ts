@@ -45,7 +45,7 @@ const app = new Hono()
         path: "/",
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
+        sameSite: "none", // Allow cross-site cookies for custom domain
         maxAge: 60 * 60 * 24 * 30,
       });
 
