@@ -2,11 +2,14 @@ import { hc } from "hono/client";
 
 import { AppType } from "@/app/api/[[...route]]/route";
 
-// Use Vercel domain for API calls in production, localhost in development
+// Use current domain for API calls to avoid cross-origin issues
 const getApiUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://task-manager-zo6p.vercel.app';
+  // In browser, use the current origin (same domain as the frontend)
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
   }
+  
+  // For server-side rendering, try to get the host from headers or use default
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 };
 

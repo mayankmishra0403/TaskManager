@@ -19,7 +19,7 @@ app.use("/*", cors({
     "https://tm.edu-nova.tech",
     "http://localhost:3000"
   ],
-  allowHeaders: ["Content-Type", "Authorization"],
+  allowHeaders: ["Content-Type", "Authorization", "Cookie"],
   allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
 }));
