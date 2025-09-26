@@ -15,6 +15,7 @@ import {
 } from "node-appwrite";
 
 import { AUTH_COOKIE } from "@/features/auth/constants";
+import { getAppwriteConfig } from "./env-config";
 
 type AdditionalContext = {
   Variables: {
@@ -29,9 +30,10 @@ type AdditionalContext = {
 export const sessionMiddleware = createMiddleware<AdditionalContext>(
   async (c, next) => {
     try {
+      const config = getAppwriteConfig();
       const client = new Client()
-        .setEndpoint(process.env.NEXT_APPWRITE_ENDPOINT || process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-        .setProject(process.env.NEXT_APPWRITE_PROJECT || process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
+        .setEndpoint(config.endpoint)
+        .setProject(config.project);
 
       const session = getCookie(c, AUTH_COOKIE);
 
