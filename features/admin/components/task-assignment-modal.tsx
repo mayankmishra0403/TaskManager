@@ -74,12 +74,12 @@ export const TaskAssignmentModal = ({
 
     updateTask(
       {
-        param: { taskId: values.taskId },
-        json: {
+        taskId: values.taskId,
+        data: {
           assigneeId: values.employeeId,
           dueDate: values.dueDate,
-          priority: values.priority,
-          status: selectedTask.status === 'BACKLOG' ? 'TODO' : selectedTask.status,
+          ...(values.priority && { priority: values.priority as TaskPriority }),
+          status: (selectedTask as any).status === 'BACKLOG' ? 'TODO' : (selectedTask as any).status,
         },
       },
       {

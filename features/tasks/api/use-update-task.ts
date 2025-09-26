@@ -2,13 +2,17 @@ import { client } from "@/lib/rpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { TaskStatus, TaskPriority } from "../schemas";
+
 interface UpdateTaskData {
-  name: string;
+  name?: string;
   description?: string;
-  status: "BACKLOG" | "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
-  priority: "LOW" | "MEDIUM" | "HIGH";
+  status?: TaskStatus;
+  priority?: TaskPriority;
   assigneeId?: string;
-  dueDate?: string;
+  dueDate?: Date;
+  projectId?: string;
+  position?: number;
 }
 
 export const useUpdateTask = () => {
@@ -16,7 +20,7 @@ export const useUpdateTask = () => {
   
   const mutation = useMutation({
     mutationFn: async ({ taskId, data }: { taskId: string; data: UpdateTaskData }) => {
-      const response = await client.api.admin.tasks[":taskId"]["$patch"]({ 
+      const response = await client.api.tasks[":taskId"]["$patch"]({ 
         param: { taskId }, 
         json: data 
       });

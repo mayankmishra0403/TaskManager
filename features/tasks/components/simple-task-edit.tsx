@@ -58,12 +58,12 @@ export const SimpleTaskEdit = ({ taskId }: SimpleTaskEditProps) => {
   useEffect(() => {
     if (task) {
       form.reset({
-        name: task.name,
-        description: task.description || "",
-        assigneeId: task.assigneeId || "unassigned",
-        status: task.status,
-        priority: task.priority,
-        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : "",
+        name: (task as any).name,
+        description: (task as any).description || "",
+        assigneeId: (task as any).assigneeId || "unassigned",
+        status: (task as any).status,
+        priority: (task as any).priority,
+        dueDate: (task as any).dueDate ? new Date((task as any).dueDate).toISOString().split('T')[0] : "",
       });
     }
   }, [task, form]);
@@ -75,7 +75,7 @@ export const SimpleTaskEdit = ({ taskId }: SimpleTaskEditProps) => {
       status: data.status,
       priority: data.priority,
       assigneeId: data.assigneeId === "unassigned" ? "unassigned" : data.assigneeId,
-      dueDate: data.dueDate || undefined,
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
     };
 
     updateTask(

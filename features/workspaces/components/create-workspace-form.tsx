@@ -108,7 +108,7 @@ const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
                             src={
                               field.value instanceof File
                                 ? URL.createObjectURL(field.value)
-                                : field.value
+                                : (field.value as string)
                             }
                             alt="workspace logo"
                             fill

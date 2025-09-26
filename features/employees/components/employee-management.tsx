@@ -36,7 +36,6 @@ export const EmployeeManagement = ({ workspaceId }: EmployeeManagementProps) => 
   const form = useForm<CreateEmployeeForm>({
     resolver: zodResolver(createEmployeeSchema),
     defaultValues: {
-      workspaceId,
       email: "",
       password: "",
       name: "",

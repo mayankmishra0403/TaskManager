@@ -66,9 +66,9 @@ export const GlobalAdminDashboard = () => {
   const totalWorkspaces = workspaces?.documents.length || 0;
   const totalProjects = allProjects?.documents.length || 0;
   const totalTasks = allTasks?.documents.length || 0;
-  const completedTasks = allTasks?.documents.filter(task => task.status === "DONE").length || 0;
-  const pendingTasks = allTasks?.documents.filter(task => task.status === "TODO").length || 0;
-  const inProgressTasks = allTasks?.documents.filter(task => task.status === "IN_PROGRESS").length || 0;
+  const completedTasks = allTasks?.documents.filter(task => (task as any).status === "DONE").length || 0;
+  const pendingTasks = allTasks?.documents.filter(task => (task as any).status === "TODO").length || 0;
+  const inProgressTasks = allTasks?.documents.filter(task => (task as any).status === "IN_PROGRESS").length || 0;
 
   return (
     <div className="p-6 space-y-6">
@@ -262,30 +262,30 @@ export const GlobalAdminDashboard = () => {
                   >
                     <div className="flex items-center gap-4">
                       <div className={`h-3 w-3 rounded-full ${
-                        task.status === 'DONE' ? 'bg-green-500' : 
-                        task.status === 'IN_PROGRESS' ? 'bg-blue-500' : 'bg-gray-300'
+                        (task as any).status === 'DONE' ? 'bg-green-500' : 
+                        (task as any).status === 'IN_PROGRESS' ? 'bg-blue-500' : 'bg-gray-300'
                       }`} />
                       <div>
-                        <h3 className="font-medium">{task.name}</h3>
+                        <h3 className="font-medium">{(task as any).name}</h3>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>Priority: {task.priority}</span>
-                          <span>Status: {task.status.replace('_', ' ')}</span>
-                          {task.assignedBy && <span>Assigned by: Admin</span>}
+                          <span>Priority: {(task as any).priority}</span>
+                          <span>Status: {(task as any).status.replace('_', ' ')}</span>
+                          {(task as any).assignedBy && <span>Assigned by: Admin</span>}
                         </div>
-                        {task.dueDate && (
+                        {(task as any).dueDate && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="h-3 w-3" />
-                            Due: {new Date(task.dueDate).toLocaleDateString()}
+                            Due: {new Date((task as any).dueDate).toLocaleDateString()}
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={
-                        task.priority === 'HIGH' ? 'destructive' : 
-                        task.priority === 'MEDIUM' ? 'default' : 'secondary'
+                        (task as any).priority === 'HIGH' ? 'destructive' : 
+                        (task as any).priority === 'MEDIUM' ? 'default' : 'secondary'
                       }>
-                        {task.priority}
+                        {(task as any).priority}
                       </Badge>
                     </div>
                   </div>
