@@ -9,4 +9,6 @@ export type Employee = Models.Document & {
   userId: string; // Appwrite user ID
   createdBy: string; // Admin who created this employee
   isActive: boolean;
+  profilePhotoId?: string; // Appwrite storage file ID
+  profilePhotoUrl?: string; // Public URL for the profile photo
 };

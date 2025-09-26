@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 interface AuthLayoutProps {
@@ -15,7 +16,13 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
       <div className="mx-auto max-w-screen-2xl p-4">
         <nav className="flex justify-center items-center">
           <div className="flex items-center">
-            <h1 className="text-3xl font-bold text-blue-600">EDUFUTURA</h1>
+            <Image 
+              src="/logo-edu.png" 
+              alt="EduFutura Logo" 
+              width={200} 
+              height={60}
+              className="object-contain"
+            />
           </div>
         </nav>
         <div className="flex flex-col items-center justify-center pt-4 md:pt-14">

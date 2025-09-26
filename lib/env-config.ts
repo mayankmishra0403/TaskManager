@@ -7,6 +7,7 @@ export const getAppwriteConfig = () => {
   const databaseId = process.env.NEXT_APPWRITE_DATABASE_ID || process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
   const employeesId = process.env.NEXT_APPWRITE_EMPLOYEES_ID || process.env.NEXT_PUBLIC_APPWRITE_EMPLOYEES_ID;
   const tasksId = process.env.NEXT_APPWRITE_TASKS_ID || process.env.NEXT_PUBLIC_APPWRITE_TASKS_ID;
+  const storageId = process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID || "employee-photos";
 
   if (!endpoint || !project) {
     throw new Error('Missing required Appwrite configuration');
@@ -19,5 +20,6 @@ export const getAppwriteConfig = () => {
     databaseId,
     employeesId,
     tasksId,
+    storageId,
   };
 };

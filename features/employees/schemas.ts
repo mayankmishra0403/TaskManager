@@ -6,6 +6,7 @@ export const createEmployeeSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   employeeId: z.string().trim().min(1, "Employee ID is required"),
   department: z.string().trim().min(1, "Department is required"),
+  profilePhoto: z.instanceof(File).optional(),
 });
 
 export const updateEmployeeSchema = z.object({

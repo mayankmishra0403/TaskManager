@@ -1,22 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useGetEmployees } from "../api/use-get-employees";
 import { useCreateEmployee } from "../api/use-create-employee";
 import { useCurrent } from "@/features/auth/api/use-current";
 import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
-
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, Mail, User, Calendar, Shield } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Users, Plus, Mail, User, Calendar, Shield, Upload, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createEmployeeSchema } from "../schemas";
 import { z } from "zod";
 import { toast } from "sonner";
 
@@ -24,7 +23,15 @@ interface EmployeeManagementProps {
   workspaceId: string;
 }
 
-type CreateEmployeeForm = z.infer<typeof createEmployeeSchema>;
+const createEmployeeFormSchema = z.object({
+  name: z.string().trim().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  employeeId: z.string().trim().min(1, "Employee ID is required"),
+  department: z.string().trim().min(1, "Department is required"),
+});
+
+type CreateEmployeeForm = z.infer<typeof createEmployeeFormSchema>;
 
 export const EmployeeManagement = ({ workspaceId }: EmployeeManagementProps) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -33,8 +40,12 @@ export const EmployeeManagement = ({ workspaceId }: EmployeeManagementProps) => 
   const { data: user } = useCurrent();
   const { data: workspaces } = useGetWorkspaces();
 
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<CreateEmployeeForm>({
-    resolver: zodResolver(createEmployeeSchema),
+    resolver: zodResolver(createEmployeeFormSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -44,13 +55,48 @@ export const EmployeeManagement = ({ workspaceId }: EmployeeManagementProps) => 
     },
   });
 
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error("File size must be less than 5MB");
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select an image file");
+        return;
+      }
+
+      setSelectedPhoto(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhotoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePhoto = () => {
+    setSelectedPhoto(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const onSubmit = (data: CreateEmployeeForm) => {
     createEmployee(
-      { json: data },
+      {
+        ...data,
+        profilePhoto: selectedPhoto || undefined,
+      },
       {
         onSuccess: () => {
           toast.success("Employee created successfully");
           form.reset();
+          setSelectedPhoto(null);
+          setPhotoPreview(null);
           setIsCreateDialogOpen(false);
         },
         onError: (error) => {
@@ -192,9 +238,66 @@ export const EmployeeManagement = ({ workspaceId }: EmployeeManagementProps) => 
                 )}
               </div>
 
-
-
-
+              {/* Profile Photo Upload */}
+              <div>
+                <Label>Profile Photo (Optional)</Label>
+                <div className="mt-2">
+                  {photoPreview ? (
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={photoPreview} alt="Profile preview" />
+                        <AvatarFallback>
+                          <User className="h-8 w-8" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Change Photo
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={removePhoto}
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full h-20 border-dashed"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-6 w-6 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          Click to upload profile photo
+                        </span>
+                      </div>
+                    </Button>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoSelect}
+                    className="hidden"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Supported formats: JPG, PNG, GIF. Max size: 5MB
+                  </p>
+                </div>
+              </div>
               
               <div className="flex justify-end gap-2 pt-4">
                 <Button
@@ -248,9 +351,15 @@ export const EmployeeManagement = ({ workspaceId }: EmployeeManagementProps) => 
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User className="h-5 w-5 text-blue-600" />
-                    </div>
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage 
+                        src={employee.profilePhotoUrl} 
+                        alt={`${employee.name}'s profile`} 
+                      />
+                      <AvatarFallback className="bg-blue-100">
+                        <User className="h-5 w-5 text-blue-600" />
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <h3 className="font-medium">{employee.name}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">

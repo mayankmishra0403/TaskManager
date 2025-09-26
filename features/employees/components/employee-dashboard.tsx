@@ -7,6 +7,7 @@ import { useCurrent } from "@/features/auth/api/use-current";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   ListTodo, 
   FolderIcon, 
@@ -70,11 +71,22 @@ export const EmployeeDashboard = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Welcome, {employee.name}!</h1>
-          <p className="text-muted-foreground">
-            {employee.department} • Employee ID: {employee.employeeId}
-          </p>
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarImage 
+              src={employee.profilePhotoUrl} 
+              alt={`${employee.name}'s profile`} 
+            />
+            <AvatarFallback className="bg-blue-100 text-lg">
+              {employee.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-3xl font-bold">Welcome, {employee.name}!</h1>
+            <p className="text-muted-foreground">
+              {employee.department} • Employee ID: {employee.employeeId}
+            </p>
+          </div>
         </div>
       </div>
 

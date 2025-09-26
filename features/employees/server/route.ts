@@ -1,10 +1,12 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { ID, Query } from "node-appwrite";
+import { z } from "zod";
 
 import { createEmployeeSchema, updateEmployeeSchema } from "../schemas";
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { createAdminClient } from "@/lib/appwrite";
+import { getAppwriteConfig } from "@/lib/env-config";
 
 import {
   DATABASE_ID,
@@ -13,6 +15,15 @@ import {
   MEMBERS_ID,
 } from "@/config";
 import { MemberRole } from "@/features/members/types";
+
+// Schema for form data validation
+const createEmployeeFormSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  employeeId: z.string().min(1, "Employee ID is required"),
+  department: z.string().min(1, "Department is required"),
+});
 
 const app = new Hono()
   .get("/", sessionMiddleware, async (c) => {
@@ -34,19 +45,38 @@ const app = new Hono()
   })
   .post(
     "/",
-    zValidator("json", createEmployeeSchema),
     sessionMiddleware,
     async (c) => {
       const databases = c.get("databases");
       const user = c.get("user");
-
-      const { name, email, password, employeeId, department } = c.req.valid("json");
 
       // Check if user is admin - only admin can create employees
       const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
       
       if (!isAdmin) {
         return c.json({ error: "Unauthorized. Only admin can create employees." }, 403);
+      }
+
+      // Parse form data
+      const formData = await c.req.formData();
+      const name = formData.get("name") as string;
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+      const employeeId = formData.get("employeeId") as string;
+      const department = formData.get("department") as string;
+      const profilePhoto = formData.get("profilePhoto") as File | null;
+
+      // Validate required fields
+      const validation = createEmployeeFormSchema.safeParse({
+        name,
+        email,
+        password,
+        employeeId,
+        department,
+      });
+
+      if (!validation.success) {
+        return c.json({ error: "Invalid input data", details: validation.error.errors }, 400);
       }
 
       // Check if employee ID already exists globally
@@ -68,7 +98,7 @@ const app = new Hono()
       }
 
       // Create Appwrite user account
-      const { account } = await createAdminClient();
+      const { account, storage } = await createAdminClient();
       
       let newUser;
       try {
@@ -78,6 +108,58 @@ const app = new Hono()
           return c.json({ error: "Email already exists in the system" }, 400);
         }
         throw error;
+      }
+
+      // Handle profile photo upload
+      let profilePhotoId: string | undefined;
+      let profilePhotoUrl: string | undefined;
+
+      if (profilePhoto && profilePhoto.size > 0 && profilePhoto.name) {
+        try {
+          const config = getAppwriteConfig();
+          const fileId = ID.unique();
+          
+          console.log("Processing photo upload:", {
+            fileName: profilePhoto.name,
+            fileSize: profilePhoto.size,
+            fileType: profilePhoto.type || 'unknown'
+          });
+          
+          // Convert File to ArrayBuffer for Appwrite
+          const arrayBuffer = await profilePhoto.arrayBuffer();
+          
+          // Create a new File object with the same properties
+          const fileForUpload = new File(
+            [arrayBuffer], 
+            profilePhoto.name, 
+            { 
+              type: profilePhoto.type || 'application/octet-stream'
+            }
+          );
+          
+          console.log("Uploading to Appwrite storage...");
+          
+          // Upload to storage 
+          const file = await storage.createFile(
+            config.storageId,
+            fileId,
+            fileForUpload
+            // Note: Permissions will be inherited from bucket settings
+          );
+
+          profilePhotoId = file.$id;
+          // Create public URL for the image
+          profilePhotoUrl = `${config.endpoint}/storage/buckets/${config.storageId}/files/${file.$id}/view?project=${config.project}`;
+          
+          console.log("Photo upload successful:", {
+            fileId: profilePhotoId,
+            fileName: file.name,
+            fileSize: file.sizeOriginal
+          });
+        } catch (error) {
+          console.error("Profile photo upload failed:", error);
+          // Continue without photo if upload fails
+        }
       }
 
       // Get a default workspace (or create one if none exists)
@@ -121,6 +203,8 @@ const app = new Hono()
           createdBy: user.$id,
           isActive: true,
           workspaceId: defaultWorkspaceId,
+          ...(profilePhotoId && { profilePhotoId }),
+          ...(profilePhotoUrl && { profilePhotoUrl }),
         },
       );
 
