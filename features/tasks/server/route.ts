@@ -36,15 +36,28 @@ const app = new Hono()
     const employee = employees.documents[0];
     console.log("Employee found:", employee.name, "Employee ID:", employee.$id);
 
-    // Get tasks assigned to this specific employee only
-    const tasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, [
-      Query.equal("assigneeId", employee.$id),
-      Query.orderDesc("$createdAt"),
+    // Get tasks assigned to this employee (supports single and multi-assignees stored as JSON)
+    const [singleAssigned, searchAssigned] = await Promise.all([
+      databases.listDocuments(DATABASE_ID, TASKS_ID, [
+        Query.equal("assigneeId", employee.$id),
+        Query.orderDesc("$createdAt"),
+      ]),
+      databases.listDocuments(DATABASE_ID, TASKS_ID, [
+        Query.search("assigneeId", employee.$id),
+        Query.orderDesc("$createdAt"),
+      ]),
     ]);
 
-    console.log("Tasks found for employee:", tasks.total);
+    // Merge and de-duplicate
+    const byId = new Map<string, any>();
+    for (const doc of searchAssigned.documents) byId.set(doc.$id, doc);
+    for (const doc of singleAssigned.documents) byId.set(doc.$id, doc);
+    const merged = Array.from(byId.values());
+    merged.sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime());
 
-    return c.json({ data: tasks });
+    console.log("Tasks found for employee (merged):", merged.length);
+
+    return c.json({ data: { documents: merged, total: merged.length } });
   })
   .get("/", sessionMiddleware, async (c) => {
     const user = c.get("user");
