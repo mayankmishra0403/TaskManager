@@ -123,6 +123,9 @@ export const AdminDashboard = ({ workspaceId }: AdminDashboardProps) => {
                   .map((task) => {
                     const assignee = employees?.documents.find(emp => emp.userId === task.assigneeId);
                     return (
+                                      {tasks?.documents.filter(task => task.assigneeId).slice(0, 5).map((task) => {
+                    const assignee = employees?.documents.find(emp => emp.$id === task.assigneeId);
+                    return (
                       <div key={task.$id} className="flex items-center justify-between p-3 rounded border">
                         <div className="flex items-center gap-3">
                           <div className={`h-2 w-2 rounded-full ${
@@ -168,7 +171,7 @@ export const AdminDashboard = ({ workspaceId }: AdminDashboardProps) => {
             <CardContent>
               <div className="space-y-3">
                 {employees?.documents.slice(0, 5).map((employee) => {
-                  const employeeTasks = tasks?.documents.filter(task => task.assigneeId === employee.userId) || [];
+                  const employeeTasks = tasks?.documents.filter(task => task.assigneeId === employee.$id) || [];
                   const completedCount = employeeTasks.filter(task => task.status === 'DONE').length;
                   
                   return (

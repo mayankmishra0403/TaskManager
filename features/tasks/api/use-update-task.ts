@@ -10,6 +10,7 @@ interface UpdateTaskData {
   status?: TaskStatus;
   priority?: TaskPriority;
   assigneeId?: string;
+  assigneeIds?: string[]; // Support multiple assignees
   dueDate?: Date;
   projectId?: string;
   position?: number;

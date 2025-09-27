@@ -359,6 +359,8 @@ export const SimpleEmployeeManagement = () => {
                   {employee.isActive ? "Active" : "Inactive"}
                 </Badge>
               </div>
+
+              {/* Deletion disabled for now per request */}
             </CardContent>
           </Card>
         ))}

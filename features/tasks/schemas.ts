@@ -20,6 +20,7 @@ export const createTaskSchema = z.object({
   workspaceId: z.string().min(1, "Required"),
   projectId: z.string().optional(),
   assigneeId: z.string().optional(),
+  assigneeIds: z.array(z.string()).optional(), // Support multiple assignees
   status: z.nativeEnum(TaskStatus).default(TaskStatus.TODO),
   priority: z.nativeEnum(TaskPriority).default(TaskPriority.MEDIUM),
   dueDate: z.coerce.date().optional(),
@@ -30,6 +31,7 @@ export const updateTaskSchema = z.object({
   description: z.string().optional(),
   projectId: z.string().optional(),
   assigneeId: z.string().optional(),
+  assigneeIds: z.array(z.string()).optional(), // Support multiple assignees
   status: z.nativeEnum(TaskStatus).optional(),
   priority: z.nativeEnum(TaskPriority).optional(),
   dueDate: z.coerce.date().optional(),

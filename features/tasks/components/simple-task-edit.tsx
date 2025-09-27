@@ -74,7 +74,7 @@ export const SimpleTaskEdit = ({ taskId }: SimpleTaskEditProps) => {
       description: data.description || undefined,
       status: data.status,
       priority: data.priority,
-      assigneeId: data.assigneeId === "unassigned" ? "unassigned" : data.assigneeId,
+      assigneeId: data.assigneeId === "unassigned" ? "" : data.assigneeId,
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
     };
 

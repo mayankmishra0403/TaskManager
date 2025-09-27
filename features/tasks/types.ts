@@ -7,6 +7,7 @@ export type Task = Models.Document & {
   workspaceId: string;
   projectId?: string;
   assigneeId?: string;
+  assigneeIds?: string[]; // Support multiple assignees
   status: TaskStatus;
   priority: TaskPriority;
   dueDate?: string;

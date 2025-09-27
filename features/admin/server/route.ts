@@ -49,30 +49,59 @@ const app = new Hono()
     // Get all employees to map assigneeId to employee details
     const employees = await databases.listDocuments(DATABASE_ID, EMPLOYEES_ID, []);
     
-    // Create a map of employee document ID to employee details
+    // Create a map of both employee document ID and user ID to employee details
     const employeeMap = new Map();
+    const userIdToEmployeeMap = new Map();
     employees.documents.forEach(emp => {
-      employeeMap.set(emp.$id, {
+      const empDetails = {
         name: emp.name,
         email: emp.email,
         userId: emp.userId
-      });
+      };
+      employeeMap.set(emp.$id, empDetails);
+      userIdToEmployeeMap.set(emp.userId, empDetails);
     });
 
     // Enhance tasks with assignee information
     const enhancedTasks = {
       ...tasks,
-      documents: tasks.documents.map(task => ({
-        ...task,
-        assignee: task.assigneeId ? employeeMap.get(task.assigneeId) : null
-      }))
+      documents: tasks.documents.map(task => {
+        let assignees = [];
+        
+        if (task.assigneeId) {
+          try {
+            // Check if it's a JSON array (multiple assignees)
+            const parsedIds = JSON.parse(task.assigneeId);
+            if (Array.isArray(parsedIds)) {
+              // Multiple assignees
+              assignees = parsedIds.map(id => employeeMap.get(id)).filter(Boolean);
+            } else {
+              // Single assignee stored as JSON
+              const employee = employeeMap.get(parsedIds);
+              if (employee) assignees = [employee];
+            }
+          } catch {
+            // Single assignee (not JSON) - backward compatibility
+            const employee = employeeMap.get(task.assigneeId) || userIdToEmployeeMap.get(task.assigneeId);
+            if (employee) assignees = [employee];
+          }
+        }
+        
+        return {
+          ...task,
+          assignee: assignees.length === 1 ? assignees[0] : null, // For backward compatibility
+          assignees: assignees, // Multiple assignees
+          assigneeNames: assignees.map(emp => emp.name).join(', ') || 'Unassigned'
+        };
+      })
     };
 
     // Debug: Log task assignments for admin visibility
     console.log("Admin tasks API - Task assignments:", enhancedTasks.documents.map(task => ({
       name: (task as any).name,
       assigneeId: (task as any).assigneeId,
-      assigneeName: task.assignee?.name || 'Unassigned',
+      assigneeNames: (task as any).assigneeNames,
+      assigneeCount: (task as any).assignees.length,
       status: (task as any).status
     })));
 

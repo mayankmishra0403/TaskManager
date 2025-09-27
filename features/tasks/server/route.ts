@@ -25,7 +25,6 @@ const app = new Hono()
     const employees = await databases.listDocuments(DATABASE_ID, EMPLOYEES_ID, [
       Query.equal("userId", user.$id),
     ]);
-
     console.log("Found employees:", employees.total);
 
     if (employees.total === 0) {
@@ -99,25 +98,53 @@ const app = new Hono()
       const databases = c.get("databases");
       const user = c.get("user");
 
-      const { name, description, workspaceId, projectId, assigneeId, status, priority, dueDate } = c.req.valid("json");
+      const { name, description, workspaceId, projectId, assigneeId, assigneeIds, status, priority, dueDate } = c.req.valid("json");
 
-      console.log("Creating task with assigneeId:", assigneeId);
+      console.log("Creating task with assigneeId:", assigneeId, "assigneeIds:", assigneeIds);
 
-      // If assigneeId is provided, ensure it's the employee document ID, not user ID
-      let finalAssigneeId = assigneeId === "unassigned" ? "" : assigneeId;
+      // Handle multiple assignees - priority: assigneeIds > assigneeId
+      let finalAssigneeId = "";
       
-      if (assigneeId && assigneeId !== "unassigned") {
-        // Check if this is a user ID by trying to find the employee record
+      if (assigneeIds && assigneeIds.length > 0) {
+        // Multiple assignees - store as JSON string
+        const validEmployeeIds = [];
+        
+        for (const id of assigneeIds) {
+          if (id && id !== "unassigned") {
+            // Check if this is a user ID by trying to find the employee record
+            const employeeByUserId = await databases.listDocuments(DATABASE_ID, EMPLOYEES_ID, [
+              Query.equal("userId", id),
+            ]);
+            
+            if (employeeByUserId.total > 0) {
+              validEmployeeIds.push(employeeByUserId.documents[0].$id);
+            } else {
+              // Check if this is already an employee document ID
+              try {
+                const existingEmployee = await databases.getDocument(DATABASE_ID, EMPLOYEES_ID, id);
+                validEmployeeIds.push(existingEmployee.$id);
+              } catch (error) {
+                console.log("Invalid assigneeId in array:", id);
+              }
+            }
+          }
+        }
+        
+        if (validEmployeeIds.length > 0) {
+          // Store multiple assignees as JSON string
+          finalAssigneeId = JSON.stringify(validEmployeeIds);
+          console.log("Multiple assignees stored:", finalAssigneeId);
+        }
+      } else if (assigneeId && assigneeId !== "unassigned") {
+        // Single assignee - backward compatibility
         const employeeByUserId = await databases.listDocuments(DATABASE_ID, EMPLOYEES_ID, [
           Query.equal("userId", assigneeId),
         ]);
         
         if (employeeByUserId.total > 0) {
-          // This was a user ID, convert to employee document ID
           finalAssigneeId = employeeByUserId.documents[0].$id;
           console.log("Converted user ID to employee document ID:", assigneeId, "->", finalAssigneeId);
         } else {
-          // Check if this is already an employee document ID
           try {
             const existingEmployee = await databases.getDocument(DATABASE_ID, EMPLOYEES_ID, assigneeId);
             finalAssigneeId = existingEmployee.$id;
@@ -188,9 +215,35 @@ const app = new Hono()
       
       // Check if user is admin or assigned to the task
       const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
-      
-      if (!isAdmin && task.assigneeId !== user.$id) {
-        return c.json({ error: "Unauthorized" }, 401);
+      if (!isAdmin) {
+        // Resolve current user's employee ID
+        const employees = await databases.listDocuments(DATABASE_ID, EMPLOYEES_ID, [
+          Query.equal("userId", user.$id),
+        ]);
+
+        if (employees.total === 0) {
+          return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        const employeeId = employees.documents[0].$id;
+
+        let isAssigned = false;
+        if (typeof task.assigneeId === "string" && task.assigneeId) {
+          if (task.assigneeId.startsWith("[")) {
+            try {
+              const ids = JSON.parse(task.assigneeId) as string[];
+              isAssigned = ids.includes(employeeId);
+            } catch (_) {
+              isAssigned = false;
+            }
+          } else {
+            isAssigned = task.assigneeId === employeeId;
+          }
+        }
+
+        if (!isAssigned) {
+          return c.json({ error: "Unauthorized" }, 401);
+        }
       }
 
       return c.json({ data: task });
@@ -207,7 +260,7 @@ const app = new Hono()
       const user = c.get("user");
 
       const { taskId } = c.req.param();
-      const { name, description, projectId, assigneeId, status, priority, dueDate, position } = c.req.valid("json");
+      const { name, description, projectId, assigneeId, assigneeIds, status, priority, dueDate, position } = c.req.valid("json");
 
       const existingTask = await databases.getDocument(
         DATABASE_ID,
@@ -230,12 +283,46 @@ const app = new Hono()
         }
       }
 
-      // Check if assigneeId is being updated and track assignment
+      // Handle multiple assignees update
+      let finalAssigneeId = existingTask.assigneeId;
+      
+      if (assigneeIds && assigneeIds.length > 0) {
+        // Multiple assignees provided - convert and store as JSON
+        const validEmployeeIds = [];
+        
+        for (const id of assigneeIds) {
+          if (id && id !== "unassigned") {
+            try {
+              const existingEmployee = await databases.getDocument(DATABASE_ID, EMPLOYEES_ID, id);
+              validEmployeeIds.push(existingEmployee.$id);
+            } catch (error) {
+              console.log("Invalid assigneeId in update array:", id);
+            }
+          }
+        }
+        
+        finalAssigneeId = validEmployeeIds.length > 0 ? JSON.stringify(validEmployeeIds) : "";
+        console.log("Updated multiple assignees:", finalAssigneeId);
+      } else if (assigneeId !== undefined) {
+        // Single assignee update (backward compatibility)
+        if (assigneeId === "" || assigneeId === "unassigned") {
+          finalAssigneeId = "";
+        } else {
+          try {
+            const existingEmployee = await databases.getDocument(DATABASE_ID, EMPLOYEES_ID, assigneeId);
+            finalAssigneeId = existingEmployee.$id;
+          } catch (error) {
+            console.log("Invalid assigneeId in update:", assigneeId);
+            finalAssigneeId = "";
+          }
+        }
+      }
+
       const updateData: any = {
         name: name ?? existingTask.name,
         description: description ?? existingTask.description,
         projectId: projectId ?? existingTask.projectId,
-        assigneeId: assigneeId ?? existingTask.assigneeId,
+        assigneeId: finalAssigneeId,
         status: status ?? existingTask.status,
         priority: priority ?? existingTask.priority,
         dueDate: dueDate ? dueDate.toISOString() : existingTask.dueDate,
@@ -270,20 +357,13 @@ const app = new Hono()
       taskId,
     );
 
-    // Check if user is admin or member of workspace
+    // Only admins can delete tasks
     const isAdmin = user.labels?.includes("admin") || user.email === "admin@edu-nova.tech";
-    
     if (!isAdmin) {
-      // For employees, check if they are member of workspace
-      const member = await databases.listDocuments(DATABASE_ID, MEMBERS_ID, [
-        Query.equal("workspaceId", existingTask.workspaceId),
-        Query.equal("userId", user.$id),
-      ]);
+      return c.json({ error: "Unauthorized. Only admin can delete tasks." }, 403);
+    }
 
-      if (member.total === 0) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
-    }    await databases.deleteDocument(DATABASE_ID, TASKS_ID, taskId);
+    await databases.deleteDocument(DATABASE_ID, TASKS_ID, taskId);
 
     return c.json({ data: { $id: taskId } });
   });

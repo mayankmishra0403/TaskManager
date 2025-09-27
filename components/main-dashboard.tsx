@@ -19,7 +19,9 @@ import {
   AlertCircle
 } from "lucide-react";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import Link from "next/link";
+import { useDeleteTask } from "@/features/tasks/api/use-delete-task";
 
 const TaskStatus = {
   BACKLOG: "BACKLOG",
@@ -54,6 +56,7 @@ const MainDashboard = () => {
   // Dashboard shows ALL tasks for everyone (admin and employees)
   const { data: adminTasksData, isLoading: adminTasksLoading } = useGetAllTasks({ enabled: true });
   const { data: currentEmployee, isLoading: employeeLoading } = useGetCurrentEmployee({ enabled: !isAdmin });
+  const { mutate: deleteTask, isPending: deleting } = useDeleteTask();
   
   // Dashboard always uses admin API to show all tasks
   const tasksData = adminTasksData;
@@ -173,9 +176,41 @@ const MainDashboard = () => {
                     </CardHeader>
                     <CardContent className="pt-0">
                       {(task as any).description && (
-                        <p className="text-xs md:text-sm text-muted-foreground mb-2 md:mb-3 line-clamp-2">
-                          {(task as any).description}
-                        </p>
+                        <div className="mb-2 md:mb-3">
+                          <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
+                            {(task as any).description}
+                          </p>
+                          {((task as any).description?.length || 0) > 120 && (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <button className="mt-1 text-xs text-blue-600 hover:underline">
+                                  View more
+                                </button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-lg">
+                                <DialogHeader>
+                                  <DialogTitle className="text-base md:text-lg">
+                                    {(task as any).name || "Task details"}
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-3 text-sm">
+                                  <div>
+                                    <div className="text-xs uppercase text-muted-foreground mb-1">Description</div>
+                                    <p className="whitespace-pre-wrap">
+                                      {(task as any).description}
+                                    </p>
+                                  </div>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
+                                    <div>Created: {format(new Date(task.$createdAt), 'MMM dd, yyyy')}</div>
+                                    {(task as any).dueDate && (
+                                      <div>Due: {format(new Date((task as any).dueDate), 'MMM dd, yyyy')}</div>
+                                    )}
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                        </div>
                       )}
                       
                       <div className="space-y-1 md:space-y-2 text-xs text-muted-foreground">
@@ -183,7 +218,7 @@ const MainDashboard = () => {
                           <div className="flex items-center gap-1">
                             <User className="h-3 w-3 flex-shrink-0" />
                             <span className="truncate">
-                              Assigned to: {(task as any).assignee?.name || "Unknown Employee"}
+                              Assigned to: {(task as any).assigneeNames || (task as any).assignee?.name || "Unknown Employee"}
                             </span>
                           </div>
                         )}
@@ -215,15 +250,30 @@ const MainDashboard = () => {
                         )}
                       </div>
                       
-                      {isAdmin && (
-                        <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t">
-                          <Link href={`/admin/tasks/${task.$id}/edit`}>
+                      <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t grid grid-cols-2 gap-2">
+                        {isAdmin && (
+                          <Link href={`/admin/tasks/${task.$id}/edit`} className="col-span-1">
                             <Button size="sm" variant="outline" className="w-full text-xs md:text-sm">
                               Edit Task
                             </Button>
                           </Link>
-                        </div>
-                      )}
+                        )}
+                        {(isAdmin) && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className={`w-full text-xs md:text-sm ${!isAdmin ? "col-span-2" : ""}`}
+                            disabled={deleting}
+                            onClick={() => {
+                              if (confirm("Delete this task? This action cannot be undone.")) {
+                                deleteTask({ param: { taskId: task.$id } });
+                              }
+                            }}
+                          >
+                            {deleting ? "Deleting..." : "Delete"}
+                          </Button>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 ))}

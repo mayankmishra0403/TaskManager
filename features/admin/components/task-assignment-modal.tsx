@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -43,7 +44,8 @@ import { TaskPriority } from "@/features/tasks/schemas";
 
 const assignTaskSchema = z.object({
   taskId: z.string().min(1, "Please select a task"),
-  employeeId: z.string().min(1, "Please select an employee"),
+  employeeId: z.string().optional(), // For single assignment (backward compatibility)
+  employeeIds: z.array(z.string()).min(1, "Please select at least one employee"), // For multiple assignment
   dueDate: z.date().optional(),
   priority: z.nativeEnum(TaskPriority).optional(),
 });
@@ -65,7 +67,9 @@ export const TaskAssignmentModal = ({
 
   const form = useForm<z.infer<typeof assignTaskSchema>>({
     resolver: zodResolver(assignTaskSchema),
-    defaultValues: {},
+    defaultValues: {
+      employeeIds: [],
+    },
   });
 
   const onSubmit = (values: z.infer<typeof assignTaskSchema>) => {
@@ -76,7 +80,7 @@ export const TaskAssignmentModal = ({
       {
         taskId: values.taskId,
         data: {
-          assigneeId: values.employeeId,
+          assigneeIds: values.employeeIds, // Send multiple assignees
           dueDate: values.dueDate,
           ...(values.priority && { priority: values.priority as TaskPriority }),
           status: (selectedTask as any).status === 'BACKLOG' ? 'TODO' : (selectedTask as any).status,
@@ -139,34 +143,49 @@ export const TaskAssignmentModal = ({
 
             <FormField
               control={form.control}
-              name="employeeId"
+              name="employeeIds"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Assign to Employee</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={isPending}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose an employee" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
+                  <FormLabel>Assign to Employees (Select Multiple)</FormLabel>
+                  <FormControl>
+                    <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-3">
                       {activeEmployees.map((employee) => (
-                        <SelectItem key={employee.$id} value={employee.userId}>
-                          <div className="flex items-center gap-2">
-                            <span>{employee.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              ({employee.department})
-                            </span>
-                          </div>
-                        </SelectItem>
+                        <div key={employee.$id} className="flex items-center space-x-3">
+                          <Checkbox
+                            id={`employee-${employee.$id}`}
+                            checked={field.value?.includes(employee.$id) || false}
+                            onCheckedChange={(checked) => {
+                              const currentValue = field.value || [];
+                              if (checked) {
+                                field.onChange([...currentValue, employee.$id]);
+                              } else {
+                                field.onChange(currentValue.filter(id => id !== employee.$id));
+                              }
+                            }}
+                            disabled={isPending}
+                          />
+                          <label 
+                            htmlFor={`employee-${employee.$id}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span>{employee.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {employee.department}
+                              </span>
+                            </div>
+                          </label>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
+                      {activeEmployees.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No active employees available</p>
+                      )}
+                    </div>
+                  </FormControl>
                   <FormMessage />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Selected: {field.value?.length || 0} employee(s)
+                  </p>
                 </FormItem>
               )}
             />

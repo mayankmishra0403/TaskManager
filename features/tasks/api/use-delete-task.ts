@@ -21,7 +21,9 @@ export const useDeleteTask = () => {
     },
     onSuccess: () => {
       toast.success("Task deleted");
-      queryClient.invalidateQueries({ queryKey: ["admin", "tasks"] });
+  // Refresh both admin and employee task lists
+  queryClient.invalidateQueries({ queryKey: ["admin", "tasks"] });
+  queryClient.invalidateQueries({ queryKey: ["employee", "tasks"] });
     },
     onError: () => {
       toast.error("Failed to delete task");

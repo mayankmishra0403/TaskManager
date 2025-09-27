@@ -22,7 +22,8 @@ import { TaskStatus, TaskPriority } from "../schemas";
 const createTaskSchema = z.object({
   name: z.string().trim().min(1, "Task name is required"),
   description: z.string().optional(),
-  assigneeId: z.string().optional(),
+  // Multiple assignees support
+  assigneeIds: z.array(z.string()).optional(),
   status: z.enum([TaskStatus.BACKLOG, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.IN_REVIEW, TaskStatus.DONE]).default(TaskStatus.TODO),
   priority: z.enum([TaskPriority.LOW, TaskPriority.MEDIUM, TaskPriority.HIGH]).default(TaskPriority.MEDIUM),
   dueDate: z.string().optional(),
@@ -41,7 +42,7 @@ export const SimpleTaskCreation = () => {
     defaultValues: {
       name: "",
       description: "",
-      assigneeId: "unassigned",
+  assigneeIds: [],
       status: TaskStatus.TODO,
       priority: TaskPriority.MEDIUM,
       dueDate: "",
@@ -53,7 +54,8 @@ export const SimpleTaskCreation = () => {
     const cleanData = {
       ...data,
       workspaceId: "default", // We'll use a default workspace for now
-      assigneeId: data.assigneeId === "unassigned" ? undefined : data.assigneeId,
+      // Prefer multiple assignees; send undefined if none selected
+      assigneeIds: data.assigneeIds && data.assigneeIds.length ? data.assigneeIds : undefined,
       description: data.description || undefined,
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
     };
@@ -122,23 +124,30 @@ export const SimpleTaskCreation = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="assigneeId">Assign to Employee</Label>
-                <Select
-                  value={form.watch("assigneeId")}
-                  onValueChange={(value) => form.setValue("assigneeId", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employee (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {employees?.documents.map((employee) => (
-                      <SelectItem key={employee.userId} value={employee.userId}>
-                        {employee.name} ({employee.employeeId})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Assign to Employees (Multiple)</Label>
+                <div className="mt-2 space-y-2 max-h-44 overflow-y-auto rounded-md border p-3">
+                  {employees?.documents?.length ? (
+                    employees.documents.map((employee) => (
+                      <div key={employee.$id} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          value={employee.$id}
+                          // RHF collects all checked values into an array for the same field name
+                          {...form.register("assigneeIds")}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <Label htmlFor={`emp-${employee.$id}`} className="cursor-pointer">
+                          {employee.name} {employee.employeeId ? `(${employee.employeeId})` : ""}
+                        </Label>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No employees available</p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Selected: {form.watch("assigneeIds")?.length || 0} employee(s)
+                </p>
               </div>
 
               <div>
