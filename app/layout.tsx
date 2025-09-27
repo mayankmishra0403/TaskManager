@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import PWAUpdater from "@/components/pwa-updater";
 import PWAInstallButton from "@/components/pwa-install-button";
 import PWADetector from "@/components/pwa-detector";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -68,6 +69,7 @@ export default function RootLayout({
           <PWAInstallButton />
 
           {children}
+          <SpeedInsights />
         </QueryProvider>
       </body>
     </html>
