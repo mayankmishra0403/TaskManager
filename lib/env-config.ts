@@ -21,5 +21,7 @@ export const getAppwriteConfig = () => {
     employeesId,
     tasksId,
     storageId,
+    notificationsId: "notifications", // Collection name for notifications
+    workspacesId: process.env.NEXT_APPWRITE_WORKSPACES_ID || process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
   };
 };

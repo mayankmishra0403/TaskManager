@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Bell, X, Check, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +9,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { ClientOnlyDate } from "@/components/client-only-date";
 
 import { useGetNotifications, useMarkAsRead, useDeleteNotification } from "../api/use-notifications";
 import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
+import { useNotificationSync } from "@/hooks/use-notification-sync";
 import { Notification } from "../types";
 
 interface NotificationBellProps {
@@ -54,6 +55,9 @@ export function NotificationBell({ workspaceId }: NotificationBellProps) {
   const workspaces = workspacesData?.documents || [];
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>("");
   const [effectiveWorkspaceId, setEffectiveWorkspaceId] = useState<string>("");
+
+  // Enable notification synchronization between push notifications and in-app notifications
+  useNotificationSync();
 
   // Immediately use any available workspaceId
   useEffect(() => {
@@ -280,9 +284,7 @@ export function NotificationBell({ workspaceId }: NotificationBellProps) {
                             )}
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(notification.$createdAt), { addSuffix: true })}
-                            </span>
+                            <ClientOnlyDate date={notification.$createdAt} addSuffix={true} />
                             {!notification.isRead && (
                               <Button
                                 variant="ghost"

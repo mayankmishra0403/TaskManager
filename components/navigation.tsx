@@ -77,6 +77,12 @@ const Navigation = () => {
       icon: GoCheckCircle,
       activeIcon: GoCheckCircleFill,
     },
+    {
+      label: "Notification Settings",
+      href: `/settings/notifications`,
+      icon: SettingsIcon,
+      activeIcon: SettingsIcon,
+    },
   ];
 
   return (

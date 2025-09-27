@@ -8,8 +8,11 @@ import tasks from "@/features/tasks/server/route";
 import employees from "@/features/employees/server/route";
 import admin from "@/features/admin/server/route";
 import notifications from "@/features/notifications/server/route";
+import fcm from "@/features/fcm/server/route";
+import fcmNotifications from "@/features/fcm/server/notifications";
+import fcmAdminTest from "@/features/fcm/server/firebase-admin-test";
 
-export const runtime = "edge";
+// export const runtime = "edge"; // Disabled for Firebase Admin SDK compatibility
 
 const app = new Hono().basePath("/api");
 
@@ -32,7 +35,10 @@ const routes = app
   .route("/tasks", tasks)
   .route("/employees", employees)
   .route("/admin", admin)
-  .route("/notifications", notifications);
+  .route("/notifications", notifications)
+  .route("/fcm", fcm)
+  .route("/fcm/notifications", fcmNotifications)
+  .route("/fcm/admin-test", fcmAdminTest);
 
 export const GET = handle(app);
 export const POST = handle(app);

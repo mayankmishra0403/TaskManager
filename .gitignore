@@ -27,6 +27,9 @@ check-*.js
 debug-config.js
 test-broadcast.js
 
+# Firebase service account credentials (sensitive)
+firebase-service-account.json
+
 # Ad-hoc UI mock components
 components/simple-notification-bell.tsx# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
