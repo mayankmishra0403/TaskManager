@@ -34,30 +34,41 @@ const app = new Hono()
     }
 
     const employee = employees.documents[0];
-    console.log("Employee found:", employee.name, "Employee ID:", employee.$id);
+    console.log("Employee found:", employee.name, "Employee ID:", employee.$id, "WorkspaceId:", employee.workspaceId);
 
-    // Get tasks assigned to this employee (supports single and multi-assignees stored as JSON)
-    const [singleAssigned, searchAssigned] = await Promise.all([
-      databases.listDocuments(DATABASE_ID, TASKS_ID, [
-        Query.equal("assigneeId", employee.$id),
-        Query.orderDesc("$createdAt"),
-      ]),
-      databases.listDocuments(DATABASE_ID, TASKS_ID, [
-        Query.search("assigneeId", employee.$id),
-        Query.orderDesc("$createdAt"),
-      ]),
+    // Fetch all tasks and filter by assignment (handles both single and multi-assignee JSON)
+    const allTasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, [
+      Query.orderDesc("$createdAt"),
+      Query.limit(1000),
     ]);
 
-    // Merge and de-duplicate
-    const byId = new Map<string, any>();
-    for (const doc of searchAssigned.documents) byId.set(doc.$id, doc);
-    for (const doc of singleAssigned.documents) byId.set(doc.$id, doc);
-    const merged = Array.from(byId.values());
-    merged.sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime());
+    console.log("Total tasks fetched:", allTasks.total);
 
-    console.log("Tasks found for employee (merged):", merged.length);
+    const assigned = allTasks.documents.filter((t: any) => {
+      const a = t.assigneeId as string | undefined;
+      console.log("Checking task:", t.name, "assigneeId:", a);
+      
+      if (!a) return false;
+      
+      if (a.startsWith("[")) {
+        try {
+          const ids = JSON.parse(a) as string[];
+          const isAssigned = ids.includes(employee.$id);
+          console.log("Multi-assignee task:", t.name, "ids:", ids, "employee match:", isAssigned);
+          return isAssigned;
+        } catch {
+          return false;
+        }
+      }
+      
+      const isAssigned = a === employee.$id;
+      console.log("Single-assignee task:", t.name, "match:", isAssigned);
+      return isAssigned;
+    });
 
-    return c.json({ data: { documents: merged, total: merged.length } });
+    console.log("Tasks found for employee (filtered):", assigned.length);
+
+    return c.json({ data: { documents: assigned, total: assigned.length } });
   })
   .get("/", sessionMiddleware, async (c) => {
     const user = c.get("user");
