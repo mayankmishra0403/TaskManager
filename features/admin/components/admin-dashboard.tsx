@@ -121,9 +121,6 @@ export const AdminDashboard = ({ workspaceId }: AdminDashboardProps) => {
                   .filter(task => task.assigneeId)
                   .slice(0, 5)
                   .map((task) => {
-                    const assignee = employees?.documents.find(emp => emp.userId === task.assigneeId);
-                    return (
-                                      {tasks?.documents.filter(task => task.assigneeId).slice(0, 5).map((task) => {
                     const assignee = employees?.documents.find(emp => emp.$id === task.assigneeId);
                     return (
                       <div key={task.$id} className="flex items-center justify-between p-3 rounded border">
