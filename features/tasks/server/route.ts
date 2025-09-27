@@ -226,6 +226,64 @@ const app = new Hono()
 
       console.log("Task created with assigneeId:", task.assigneeId);
 
+      // Send notification for task assignment
+      if (finalAssigneeId) {
+        try {
+          let recipientUserIds = [];
+          
+          // Handle multiple assignees stored as JSON
+          if (finalAssigneeId.startsWith("[")) {
+            const employeeIds = JSON.parse(finalAssigneeId);
+            
+            // Convert employee IDs to user IDs
+            for (const empId of employeeIds) {
+              try {
+                const employee = await databases.getDocument(DATABASE_ID, EMPLOYEES_ID, empId);
+                if (employee.userId) {
+                  recipientUserIds.push(employee.userId);
+                }
+              } catch (error) {
+                console.error("Error fetching employee for notification:", empId, error);
+              }
+            }
+          } else {
+            // Single assignee
+            try {
+              const employee = await databases.getDocument(DATABASE_ID, EMPLOYEES_ID, finalAssigneeId);
+              if (employee.userId) {
+                recipientUserIds.push(employee.userId);
+              }
+            } catch (error) {
+              console.error("Error fetching employee for notification:", finalAssigneeId, error);
+            }
+          }
+
+          // Create notification if we have recipients
+      if (recipientUserIds.length > 0) {
+            await databases.createDocument(
+              DATABASE_ID,
+              "notifications",
+              ID.unique(),
+              {
+                title: "New Task Assigned",
+                message: `You have been assigned a new task: "${name}"`,
+                type: "task_assigned",
+        recipientIds: JSON.stringify(recipientUserIds),
+                workspaceId,
+                createdBy: user.$id,
+                taskId: task.$id,
+                priority: priority === "HIGH" ? "high" : priority === "MEDIUM" ? "medium" : "low",
+                isRead: false,
+              }
+            );
+            console.log("Task assignment notification sent to:", recipientUserIds);
+          }
+        } catch (error) {
+          console.error("Error sending task assignment notification:", error);
+          // Don't fail the task creation if notification fails
+        }
+      }
+
       return c.json({ data: task });
     },
   )
@@ -365,6 +423,57 @@ const app = new Hono()
         taskId,
         updateData,
       );
+
+      // If assignment changed and we have a new assignee, notify them
+      try {
+        const assignmentChanged = !!finalAssigneeId && finalAssigneeId !== existingTask.assigneeId;
+        if (assignmentChanged) {
+          let recipientUserIds: string[] = [];
+
+          if (typeof finalAssigneeId === 'string' && finalAssigneeId.startsWith("[")) {
+            // Multiple assignees stored as JSON string of employee IDs
+            const employeeIds = JSON.parse(finalAssigneeId) as string[];
+            for (const empId of employeeIds) {
+              try {
+                const employee = await databases.getDocument(DATABASE_ID, EMPLOYEES_ID, empId);
+                if (employee.userId) recipientUserIds.push(employee.userId);
+              } catch (error) {
+                console.error("Error fetching employee for notification (update):", empId, error);
+              }
+            }
+          } else if (typeof finalAssigneeId === 'string' && finalAssigneeId) {
+            // Single assignee employee ID
+            try {
+              const employee = await databases.getDocument(DATABASE_ID, EMPLOYEES_ID, finalAssigneeId);
+              if (employee.userId) recipientUserIds.push(employee.userId);
+            } catch (error) {
+              console.error("Error fetching employee for notification (update):", finalAssigneeId, error);
+            }
+          }
+
+          if (recipientUserIds.length > 0) {
+            await databases.createDocument(
+              DATABASE_ID,
+              "notifications",
+              ID.unique(),
+              {
+                title: "New Task Assigned",
+                message: `You have been assigned a new task: "${updateData.name || existingTask.name}"`,
+                type: "task_assigned",
+                recipientIds: JSON.stringify(recipientUserIds),
+                workspaceId: existingTask.workspaceId,
+                createdBy: user.$id,
+                taskId: task.$id,
+                priority: (updateData.priority || existingTask.priority) === "HIGH" ? "high" : (updateData.priority || existingTask.priority) === "MEDIUM" ? "medium" : "low",
+                isRead: false,
+              }
+            );
+            console.log("Task assignment notification sent (update) to:", recipientUserIds);
+          }
+        }
+      } catch (error) {
+        console.error("Error sending task assignment notification on update:", error);
+      }
 
       return c.json({ data: task });
     },

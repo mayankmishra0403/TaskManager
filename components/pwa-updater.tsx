@@ -5,6 +5,13 @@ import { useEffect } from 'react';
 export default function PWAUpdater() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
+      // In development, proactively clear stale registrations to avoid sw.js 404/update errors
+      if (process.env.NODE_ENV !== 'production') {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((r) => r.unregister().catch(() => {}));
+        });
+        return; // Skip update flow in dev; next-pwa is disabled
+      }
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         window.location.reload();
       });

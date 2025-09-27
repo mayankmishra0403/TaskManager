@@ -2,7 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/rpc";
 
-export const useGetWorkspaces = () => {
+type Options = {
+  enabled?: boolean;
+};
+
+export const useGetWorkspaces = (options?: Options) => {
   const query = useQuery({
     queryKey: ["workspaces"],
     queryFn: async () => {
@@ -16,6 +20,9 @@ export const useGetWorkspaces = () => {
 
       return data;
     },
+    enabled: options?.enabled ?? true,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   return query;

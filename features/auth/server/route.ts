@@ -44,7 +44,8 @@ const app = new Hono()
       setCookie(c, AUTH_COOKIE, session.secret, {
         path: "/",
         httpOnly: true,
-        secure: true,
+        // Use secure cookies in production; allow non-secure in local dev so the cookie is set on http://localhost
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax", // Use lax for better compatibility with custom domains
         maxAge: 60 * 60 * 24 * 30,
       });

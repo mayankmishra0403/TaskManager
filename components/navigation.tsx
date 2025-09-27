@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { SettingsIcon, UsersIcon, FolderIcon, ShieldIcon, UserPlus } from "lucide-react";
+import { SettingsIcon, UsersIcon, FolderIcon, ShieldIcon, UserPlus, Megaphone } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useCurrent } from "@/features/auth/api/use-current";
@@ -44,6 +44,12 @@ const Navigation = () => {
       href: `/admin/employees`,
       icon: UsersIcon,
       activeIcon: UsersIcon,
+    },
+    {
+      label: "Manage Notifications",
+      href: `/admin/notifications`,
+      icon: Megaphone,
+      activeIcon: Megaphone,
     },
     {
       label: "All Tasks",

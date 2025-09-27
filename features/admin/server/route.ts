@@ -47,37 +47,44 @@ const app = new Hono()
     ]);
 
     // Get all employees to map assigneeId to employee details
-    const employees = await databases.listDocuments(DATABASE_ID, EMPLOYEES_ID, []);
+    const employees = await databases.listDocuments(DATABASE_ID, EMPLOYEES_ID, []).catch((e) => {
+      console.error("Admin tasks API - failed to list employees", e);
+      return { documents: [], total: 0 } as any;
+    });
     
     // Create a map of both employee document ID and user ID to employee details
     const employeeMap = new Map();
     const userIdToEmployeeMap = new Map();
-    employees.documents.forEach(emp => {
-      const empDetails = {
-        name: emp.name,
-        email: emp.email,
-        userId: emp.userId
-      };
-      employeeMap.set(emp.$id, empDetails);
-      userIdToEmployeeMap.set(emp.userId, empDetails);
+    (employees.documents || []).forEach((emp: any) => {
+      try {
+        const empDetails = {
+          name: emp.name,
+          email: emp.email,
+          userId: emp.userId
+        };
+        if (emp?.$id) employeeMap.set(emp.$id, empDetails);
+        if (emp?.userId) userIdToEmployeeMap.set(emp.userId, empDetails);
+      } catch (e) {
+        console.warn("Admin tasks API - skipping malformed employee doc", emp?.$id, e);
+      }
     });
 
     // Enhance tasks with assignee information
     const enhancedTasks = {
       ...tasks,
-      documents: tasks.documents.map(task => {
+      documents: tasks.documents.map((task: any) => {
         let assignees = [];
         
         if (task.assigneeId) {
           try {
             // Check if it's a JSON array (multiple assignees)
-            const parsedIds = JSON.parse(task.assigneeId);
+            const parsedIds = typeof task.assigneeId === 'string' ? JSON.parse(task.assigneeId) : task.assigneeId;
             if (Array.isArray(parsedIds)) {
               // Multiple assignees
-              assignees = parsedIds.map(id => employeeMap.get(id)).filter(Boolean);
+              assignees = parsedIds.map((id: string) => employeeMap.get(id) || userIdToEmployeeMap.get(id)).filter(Boolean);
             } else {
               // Single assignee stored as JSON
-              const employee = employeeMap.get(parsedIds);
+              const employee = employeeMap.get(parsedIds) || userIdToEmployeeMap.get(parsedIds);
               if (employee) assignees = [employee];
             }
           } catch {
@@ -140,6 +147,9 @@ const app = new Hono()
     const { name, description, status, priority, assigneeId, dueDate } = await c.req.json();
 
     try {
+      // Read existing task to detect assignment changes and workspace
+      const existingTask = await databases.getDocument(DATABASE_ID, TASKS_ID, taskId);
+
       // Prepare update data
       const updateData: any = {
         name,
@@ -191,6 +201,43 @@ const app = new Hono()
         taskId,
         updateData
       );
+
+      // If assignment changed and we have a valid new assignee, notify them
+      try {
+        const newAssignee = updateData.assigneeId;
+        const changed = newAssignee !== undefined && newAssignee !== existingTask.assigneeId && !!newAssignee;
+        if (changed) {
+          let recipientUserIds: string[] = [];
+          try {
+            const employee = await databases.getDocument(DATABASE_ID, EMPLOYEES_ID, newAssignee);
+            if (employee.userId) recipientUserIds.push(employee.userId);
+          } catch (e) {
+            console.error("Admin route: error resolving employee for notification", newAssignee, e);
+          }
+
+          if (recipientUserIds.length > 0) {
+            await databases.createDocument(
+              DATABASE_ID,
+              "notifications",
+              crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString()),
+              {
+                title: "New Task Assigned",
+                message: `You have been assigned a new task: "${updateData.name || existingTask.name}"`,
+                type: "task_assigned",
+                recipientIds: JSON.stringify(recipientUserIds),
+                workspaceId: existingTask.workspaceId,
+                createdBy: user.$id,
+                taskId: task.$id,
+                priority: (updateData.priority || existingTask.priority) === "HIGH" ? "high" : (updateData.priority || existingTask.priority) === "MEDIUM" ? "medium" : "low",
+                isRead: false,
+              }
+            );
+            console.log("Admin route: task assignment notification sent to:", recipientUserIds);
+          }
+        }
+      } catch (e) {
+        console.error("Admin route: failed to send assignment notification:", e);
+      }
 
       return c.json({ data: task });
     } catch (error) {

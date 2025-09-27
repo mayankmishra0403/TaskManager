@@ -12,8 +12,9 @@ export const useGetTask = (taskId: string) => {
         throw new Error("Failed to fetch tasks");
       }
 
-      const { data } = await response.json();
-      const task = data.documents?.find((t: any) => t.$id === taskId);
+  const { data } = await response.json();
+  const docs = (data.documents as any[] | undefined) || [];
+  const task = docs.find((t: any) => t.$id === taskId);
       
       if (!task) {
         throw new Error("Task not found");

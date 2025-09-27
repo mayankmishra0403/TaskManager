@@ -7,6 +7,7 @@ import projects from "@/features/projects/server/route";
 import tasks from "@/features/tasks/server/route";
 import employees from "@/features/employees/server/route";
 import admin from "@/features/admin/server/route";
+import notifications from "@/features/notifications/server/route";
 
 export const runtime = "edge";
 
@@ -30,7 +31,8 @@ const routes = app
   .route("/projects", projects)  
   .route("/tasks", tasks)
   .route("/employees", employees)
-  .route("/admin", admin);
+  .route("/admin", admin)
+  .route("/notifications", notifications);
 
 export const GET = handle(app);
 export const POST = handle(app);

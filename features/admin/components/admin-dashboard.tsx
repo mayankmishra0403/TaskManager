@@ -6,9 +6,10 @@ import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, ListTodo, FolderIcon, UserPlus, ClipboardList } from "lucide-react";
+import { Users, ListTodo, FolderIcon, UserPlus, ClipboardList, Send } from "lucide-react";
 import Link from "next/link";
 import { TaskAssignmentModal } from "./task-assignment-modal";
+import { BroadcastMessageModal } from "@/features/notifications/components/broadcast-message-modal";
 import { useState } from "react";
 
 interface AdminDashboardProps {
@@ -42,10 +43,21 @@ export const AdminDashboard = ({ workspaceId }: AdminDashboardProps) => {
                 Manage Employees
               </Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/workspaces/${workspaceId}/admin/notifications`}>
+                Manage Notifications
+              </Link>
+            </Button>
             <Button onClick={() => setIsAssignModalOpen(true)}>
               <ClipboardList className="size-4 mr-2" />
               Assign Tasks
             </Button>
+            <BroadcastMessageModal workspaceId={workspaceId}>
+              <Button variant="outline">
+                <Send className="size-4 mr-2" />
+                Send Message
+              </Button>
+            </BroadcastMessageModal>
           </div>
         </div>
 

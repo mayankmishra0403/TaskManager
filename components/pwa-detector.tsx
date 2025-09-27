@@ -7,9 +7,11 @@ export default function PWADetector() {
     // Enhanced PWA installation detection
     const setupPWA = () => {
       // Register service worker manually if needed
-      if ('serviceWorker' in navigator) {
+      // Only register manually in production when next-pwa is not disabled
+      const isProd = process.env.NODE_ENV === 'production';
+      if (isProd && 'serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch((error) => {
-          console.log('Service worker registration failed:', error);
+          console.warn('Service worker registration failed:', error);
         });
       }
 

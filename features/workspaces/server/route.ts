@@ -29,6 +29,9 @@ const app = new Hono()
         WORKSPACES_ID,
         [Query.orderDesc("$createdAt")]
       );
+      console.log("Workspaces API - Admin user:", user.name, user.email);
+      console.log("Workspaces API - Admin workspaces:", workspaces.total, "workspaces found");
+      console.log("Workspaces API - Admin workspace data:", workspaces.documents.map(w => ({ id: w.$id, name: w.name })));
       return c.json({ data: workspaces });
     }
 
@@ -48,6 +51,10 @@ const app = new Hono()
       WORKSPACES_ID,
       [Query.orderDesc("$createdAt"), Query.contains("$id", workspaceIds)],
     );
+    
+    console.log("Workspaces API - Employee user:", user.name, user.email);
+    console.log("Workspaces API - Employee workspaces:", workspaces.total, "workspaces found");
+    console.log("Workspaces API - Employee workspace data:", workspaces.documents.map(w => ({ id: w.$id, name: w.name })));
     return c.json({ data: workspaces });
   })
   .post(

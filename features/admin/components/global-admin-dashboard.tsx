@@ -15,14 +15,16 @@ import {
   Calendar,
   Shield,
   Plus,
-  Eye
+  Eye,
+  Megaphone
 } from "lucide-react";
 import Link from "next/link";
-import { useGetAllEmployees } from "../api/use-get-all-employees";
+import { useGetAllEmployees } from "@/features/admin/api/use-get-all-employees";
 import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
-import { useGetAllTasks } from "../api/use-get-all-tasks";
-import { useGetAllProjects } from "../api/use-get-all-projects";
+import { useGetAllTasks } from "@/features/admin/api/use-get-all-tasks";
+import { useGetAllProjects } from "@/features/admin/api/use-get-all-projects";
 import { useCurrent } from "@/features/auth/api/use-current";
+import { AdminNotificationsManager } from "@/features/notifications/components/admin-notifications-manager";
 
 export const GlobalAdminDashboard = () => {
   const { data: user } = useCurrent();
@@ -62,13 +64,13 @@ export const GlobalAdminDashboard = () => {
     );
   }
 
-  const totalEmployees = allEmployees?.documents.length || 0;
-  const totalWorkspaces = workspaces?.documents.length || 0;
-  const totalProjects = allProjects?.documents.length || 0;
-  const totalTasks = allTasks?.documents.length || 0;
-  const completedTasks = allTasks?.documents.filter(task => (task as any).status === "DONE").length || 0;
-  const pendingTasks = allTasks?.documents.filter(task => (task as any).status === "TODO").length || 0;
-  const inProgressTasks = allTasks?.documents.filter(task => (task as any).status === "IN_PROGRESS").length || 0;
+  const totalEmployees = (allEmployees?.documents as any[] | undefined)?.length || 0;
+  const totalWorkspaces = (workspaces?.documents as any[] | undefined)?.length || 0;
+  const totalProjects = (allProjects?.documents as any[] | undefined)?.length || 0;
+  const totalTasks = (allTasks?.documents as any[] | undefined)?.length || 0;
+  const completedTasks = ((allTasks?.documents as any[] | undefined) || []).filter((task: any) => (task as any).status === "DONE").length;
+  const pendingTasks = ((allTasks?.documents as any[] | undefined) || []).filter((task: any) => (task as any).status === "TODO").length;
+  const inProgressTasks = ((allTasks?.documents as any[] | undefined) || []).filter((task: any) => (task as any).status === "IN_PROGRESS").length;
 
   return (
     <div className="p-6 space-y-6">
@@ -80,6 +82,11 @@ export const GlobalAdminDashboard = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button asChild>
+            <Link href="/admin/notifications">
+              Manage Notifications
+            </Link>
+          </Button>
           <Button asChild>
             <Link href="/workspaces">
               <Plus className="size-4 mr-2" />
@@ -145,6 +152,9 @@ export const GlobalAdminDashboard = () => {
           <TabsTrigger value="workspaces">Workspaces</TabsTrigger>
           <TabsTrigger value="tasks">All Tasks</TabsTrigger>
           <TabsTrigger value="projects">All Projects</TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Megaphone className="h-3 w-3" /> Notifications
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="employees" className="space-y-4">
@@ -166,7 +176,7 @@ export const GlobalAdminDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {allEmployees?.documents.map((employee) => (
+                  {((allEmployees?.documents as any[] | undefined) || []).map((employee: any) => (
                     <div
                       key={employee.$id}
                       className="flex items-center justify-between p-4 border rounded-lg"
@@ -215,7 +225,7 @@ export const GlobalAdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {workspaces?.documents.map((workspace) => (
+                {((workspaces?.documents as any[] | undefined) || []).map((workspace: any) => (
                   <div
                     key={workspace.$id}
                     className="flex items-center justify-between p-4 border rounded-lg"
@@ -255,7 +265,7 @@ export const GlobalAdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {allTasks?.documents.map((task) => (
+                {((allTasks?.documents as any[] | undefined) || []).map((task: any) => (
                   <div
                     key={task.$id}
                     className="flex items-center justify-between p-4 border rounded-lg"
@@ -302,7 +312,7 @@ export const GlobalAdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {allProjects?.documents.map((project) => (
+                {((allProjects?.documents as any[] | undefined) || []).map((project: any) => (
                   <div
                     key={project.$id}
                     className="flex items-center justify-between p-4 border rounded-lg"
@@ -331,6 +341,10 @@ export const GlobalAdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-4">
+          <AdminNotificationsManager />
         </TabsContent>
       </Tabs>
     </div>

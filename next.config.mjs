@@ -40,10 +40,9 @@ const withPWA = nextPWA({
       },
     },
   ],
-  fallbacks: {
-    document: '/offline',
-  },
-  disable: process.env.NODE_ENV === 'development',
+  // Only generate fallbacks and service worker in production
+  fallbacks: process.env.NODE_ENV === 'production' ? { document: '/offline' } : undefined,
+  disable: process.env.NODE_ENV !== 'production',
 });
 
 /** @type {import('next').NextConfig} */

@@ -81,7 +81,7 @@ const MainDashboard = () => {
   // Admin can manage tasks, employees can view all tasks with assignments
   const visibleTasks = tasks;
 
-  const tasksByStatus = {
+  const tasksByStatus: Record<string, any[]> = {
     [TaskStatus.BACKLOG]: visibleTasks.filter(task => (task as any).status === TaskStatus.BACKLOG),
     [TaskStatus.TODO]: visibleTasks.filter(task => (task as any).status === TaskStatus.TODO),
     [TaskStatus.IN_PROGRESS]: visibleTasks.filter(task => (task as any).status === TaskStatus.IN_PROGRESS),
