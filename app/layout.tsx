@@ -7,6 +7,8 @@ import "./globals.css";
 import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import PWAUpdater from "@/components/pwa-updater";
+import PWAInstallButton from "@/components/pwa-install-button";
+import PWADetector from "@/components/pwa-detector";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -50,14 +52,20 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Task Manager Pro" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+        <meta name="msapplication-TileColor" content="#1f2937" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="application-name" content="Task Manager Pro" />
+        <link rel="apple-touch-icon" href="/android-chrome-192x192.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#1f2937" />
       </head>
       <body className={cn(inter.className, "antialiased min-h-screen")}>
         <QueryProvider>
           <Toaster />
           <PWAUpdater />
+          <PWADetector />
+          <PWAInstallButton />
 
           {children}
         </QueryProvider>
